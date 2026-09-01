@@ -7,6 +7,8 @@ import {
   MapPin,
   Wifi,
   FileText,
+  FolderOpen,
+  LayoutGrid,
   ChevronRight,
   Home,
   BookOpen,
@@ -22,10 +24,11 @@ import {
   Sparkles,
   Send,
   Clock,
+  Download,
+  ExternalLink,
 } from "lucide-react";
 
 // Суперэллипс (n≈3.4) — только для элементов, близких к квадрату (бейджи, плитки).
-// На вытянутых карточках форма искажает углы, поэтому там обычное скругление.
 function buildSquircle(n = 4, steps = 48) {
   const p = 2 / n;
   const pts = [];
@@ -42,7 +45,6 @@ function buildSquircle(n = 4, steps = 48) {
 
 const SQUIRCLE_TIGHT = buildSquircle(3.4);
 
-// -webkit-префикс продублирован ради Safari < 14 и старых WebView в Telegram на Android
 const squircleTile = {
   clipPath: SQUIRCLE_TIGHT,
   WebkitClipPath: SQUIRCLE_TIGHT,
@@ -79,12 +81,6 @@ const mockData = {
       { id: "b4", title: "Неделя в строю", earned: false, hint: "7 дней подряд в приложении" },
     ],
   },
-  quickLinks: [
-    { id: "services", title: "Услуги B2B", subtitle: "Каталог и тарифы", icon: Briefcase },
-    { id: "map", title: "Карта офиса", subtitle: "Этажи и переговорные", icon: MapPin },
-    { id: "coverage", title: "Зона покрытия", subtitle: "Карта сети и SLA", icon: Wifi },
-    { id: "templates", title: "Шаблоны КП", subtitle: "Документы для клиента", icon: FileText },
-  ],
   dates: [
     { id: "d3", label: "3", weekday: "ЧТ" },
     { id: "d4", label: "4", weekday: "ПТ" },
@@ -112,6 +108,170 @@ const mockData = {
     sender: "Бот-наставник",
     text: "Не забудьте пройти «Вводный инструктаж» сегодня до 18:00",
   },
+
+  // ── Плитки «Полезное под рукой». Каждая раскрывается в отдельный экран ──
+  quickLinks: [
+    {
+      id: "services",
+      title: "Услуги B2B",
+      subtitle: "Каталог и тарифы",
+      icon: Briefcase,
+      kind: "tariffs",
+      note: "Цены указаны без НДС, за один номер в месяц.",
+      groups: [
+        {
+          title: "Мобильная связь",
+          items: [
+            { id: "tr1", name: "Бизнес Старт", price: "450 ₽", details: "300 мин · 15 ГБ · безлимит внутри сети", badge: "Хит" },
+            { id: "tr2", name: "Бизнес Актив", price: "790 ₽", details: "900 мин · 40 ГБ · роуминг по РФ", badge: null },
+            { id: "tr3", name: "Бизнес Максимум", price: "1 340 ₽", details: "Безлимит мин · 100 ГБ · СНГ включён", badge: null },
+          ],
+        },
+        {
+          title: "Дополнительные услуги",
+          items: [
+            { id: "tr4", name: "Виртуальная АТС", price: "от 990 ₽", details: "Многоканальный номер, запись звонков", badge: null },
+            { id: "tr5", name: "Интернет для офиса", price: "от 1 500 ₽", details: "До 500 Мбит/с, статический IP", badge: null },
+            { id: "tr6", name: "М2М / IoT SIM", price: "от 90 ₽", details: "Для терминалов, датчиков, транспорта", badge: "Новое" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "map",
+      title: "Карта офиса",
+      subtitle: "Этажи и переговорные",
+      icon: MapPin,
+      kind: "office",
+      address: "Москва, Оружейный пер., 41 · вход с южной стороны",
+      note: "Схема демонстрационная. Реальная планировка подключается на этапе внедрения.",
+      floors: [
+        {
+          id: "f1",
+          label: "1 этаж",
+          caption: "Вход, ресепшн, пропуска",
+          rooms: [
+            { id: "r11", name: "Ресепшн", type: "service", span: 2 },
+            { id: "r12", name: "Бюро пропусков", type: "service", span: 1 },
+            { id: "r13", name: "Гардероб", type: "common", span: 1 },
+            { id: "r14", name: "Кофе-пойнт", type: "common", span: 2 },
+          ],
+        },
+        {
+          id: "f3",
+          label: "3 этаж",
+          caption: "Ваш этаж — отдел B2B",
+          current: true,
+          rooms: [
+            { id: "r31", name: "B2B-продажи", type: "work", span: 3, you: true },
+            { id: "r32", name: "Пресейл", type: "work", span: 1 },
+            { id: "r33", name: "Переговорная «Волга»", type: "meeting", span: 2 },
+            { id: "r34", name: "Переговорная «Кама»", type: "meeting", span: 2 },
+            { id: "r35", name: "Кухня", type: "common", span: 1 },
+            { id: "r36", name: "Тихая комната", type: "common", span: 1 },
+          ],
+        },
+        {
+          id: "f4",
+          label: "4 этаж",
+          caption: "HR, обучение, IT",
+          rooms: [
+            { id: "r41", name: "HR-отдел", type: "work", span: 2 },
+            { id: "r42", name: "IT-хелпдеск", type: "service", span: 2 },
+            { id: "r43", name: "Учебный класс", type: "meeting", span: 3 },
+            { id: "r44", name: "Столовая", type: "common", span: 1 },
+          ],
+        },
+      ],
+      legend: [
+        { type: "work", label: "Рабочие зоны" },
+        { type: "meeting", label: "Переговорные" },
+        { type: "service", label: "Службы" },
+        { type: "common", label: "Общие зоны" },
+      ],
+    },
+    {
+      id: "coverage",
+      title: "Зона покрытия",
+      subtitle: "Карта сети и SLA",
+      icon: Wifi,
+      kind: "coverage",
+      note: "В коммерческом предложении покрытие всегда указывается как прогнозное.",
+      regions: [
+        { id: "c1", name: "Москва и область", quality: "Отличное", level: 3, sla: "99,7%" },
+        { id: "c2", name: "Санкт-Петербург", quality: "Отличное", level: 3, sla: "99,7%" },
+        { id: "c3", name: "Города 500 тыс.+", quality: "Хорошее", level: 2, sla: "99,5%" },
+        { id: "c4", name: "Малые города", quality: "Базовое", level: 2, sla: "99,5%" },
+        { id: "c5", name: "Трассы и посёлки", quality: "Неуверенное", level: 1, sla: "по обследованию" },
+      ],
+    },
+    {
+      id: "templates",
+      title: "Шаблоны КП",
+      subtitle: "Документы для клиента",
+      icon: FileText,
+      kind: "files",
+      groups: [
+        {
+          title: "Коммерческие предложения",
+          items: [
+            { id: "d1", name: "КП: мобильная связь", meta: "DOCX · 240 КБ" },
+            { id: "d2", name: "КП: связь + интернет", meta: "DOCX · 310 КБ" },
+            { id: "d3", name: "КП: виртуальная АТС", meta: "DOCX · 180 КБ" },
+          ],
+        },
+        {
+          title: "Расчёты",
+          items: [
+            { id: "d4", name: "Калькулятор выгоды", meta: "XLSX · 95 КБ" },
+            { id: "d5", name: "Сравнение с конкурентами", meta: "XLSX · 120 КБ" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "docs",
+      title: "Документы",
+      subtitle: "Бланки и регламенты",
+      icon: FolderOpen,
+      kind: "files",
+      groups: [
+        {
+          title: "Для новичка",
+          items: [
+            { id: "d6", name: "Памятка первого месяца", meta: "PDF · 1,2 МБ" },
+            { id: "d7", name: "Полевой устав менеджера", meta: "PDF · 640 КБ" },
+            { id: "d8", name: "Кодекс делового общения", meta: "PDF · 420 КБ" },
+          ],
+        },
+        {
+          title: "Заявления и бланки",
+          items: [
+            { id: "d9", name: "Заявление на отпуск", meta: "DOCX · 45 КБ" },
+            { id: "d10", name: "Авансовый отчёт", meta: "XLSX · 60 КБ" },
+            { id: "d11", name: "Заявка на командировку", meta: "DOCX · 55 КБ" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "tools",
+      title: "Сервисы",
+      subtitle: "Внутренние системы",
+      icon: LayoutGrid,
+      kind: "tools",
+      note: "Доступы выдаёт IT-хелпдеск в первый рабочий день.",
+      items: [
+        { id: "s1", name: "CRM", detail: "Клиенты, сделки, воронка", status: "Доступ выдан" },
+        { id: "s2", name: "Корпоративный портал", detail: "Новости, оргструктура, контакты", status: "Доступ выдан" },
+        { id: "s3", name: "LMS: обучение", detail: "Курсы, тесты, аттестация", status: "Доступ выдан" },
+        { id: "s4", name: "Бронь переговорных", detail: "Свободные комнаты на этаже", status: "Доступ выдан" },
+        { id: "s5", name: "Заявки в IT", detail: "Техника, доступы, почта", status: "Доступ выдан" },
+        { id: "s6", name: "Личный кабинет сотрудника", detail: "Расчётные листы, справки", status: "Ожидает активации" },
+      ],
+    },
+  ],
+
   base: {
     categories: ["Все", "Продукт", "Скрипты продаж", "CRM", "Регламенты"],
     articles: [
@@ -206,7 +366,7 @@ const mockData = {
     name: "ИИ-ассистент",
     tagline: "Отвечает на частые вопросы 24/7",
     greeting: "Привет! Спроси меня про тарифы, скрипты продаж или работу в CRM.",
-    suggestions: ["Как считать выгоду по тарифу?", "Где взять шаблон КП?", "Как завести сделку в CRM?"],
+    suggestions: ["Как считать выгоду по тарифу?", "Где взять шаблон КП?", "На каком этаже мой отдел?"],
   },
   plan: {
     currentWeek: 1,
@@ -279,6 +439,13 @@ const statusStyles = {
   todo: "bg-gray-200 border border-gray-300",
 };
 
+const roomStyles = {
+  work: "bg-[#111318] text-white",
+  meeting: "bg-gray-300 text-[#111318]",
+  service: "bg-gray-100 text-[#111318] border border-gray-200",
+  common: "bg-white text-gray-500 border border-dashed border-gray-300",
+};
+
 function getAiReply(text) {
   const t = text.toLowerCase();
   if (t.includes("тариф") || t.includes("выгод")) {
@@ -290,6 +457,9 @@ function getAiReply(text) {
   if (t.includes("crm") || t.includes("срм") || t.includes("сделк")) {
     return "Перед созданием сделки проверьте компанию по ИНН, чтобы не создать дубль. Пошаговая инструкция — в «Базе знаний» → «CRM».";
   }
+  if (t.includes("этаж") || t.includes("офис") || t.includes("переговор")) {
+    return "Отдел B2B-продаж на 3 этаже, там же переговорные «Волга» и «Кама». Схема — в «Базе знаний» → плитка «Карта офиса».";
+  }
   if (t.includes("кп") || t.includes("шаблон") || t.includes("документ")) {
     return "Шаблоны коммерческих предложений лежат в «Базе знаний» → плитка «Шаблоны КП».";
   }
@@ -297,7 +467,7 @@ function getAiReply(text) {
     return "До 10% утверждаете сами, от 10 до 20% — через руководителя группы, свыше 20% — через коммерческого директора.";
   }
   if (t.includes("привет") || t.includes("здрав")) {
-    return "Привет! Чем могу помочь: тарифы, скрипты продаж, CRM или регламенты?";
+    return "Привет! Чем могу помочь: тарифы, скрипты продаж, CRM, документы или карта офиса?";
   }
   return "Пока отвечаю на ограниченный набор тем — это демо-версия. В боевом решении подключусь к полной базе знаний и LMS.";
 }
@@ -561,7 +731,181 @@ function ProfileScreen({ profile, gamification, onBack, onShowPush }) {
   );
 }
 
-function BaseScreen({ base, quickLinks, onOpenArticle }) {
+// ── Экраны для плиток «Полезное под рукой» ──
+
+function OfficeMapView({ link }) {
+  const [floorId, setFloorId] = useState(link.floors.find((f) => f.current)?.id ?? link.floors[0].id);
+  const floor = link.floors.find((f) => f.id === floorId);
+
+  return (
+    <>
+      <p className="text-[12px] text-gray-500 mb-4">{link.address}</p>
+
+      <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar -mx-5 px-5">
+        {link.floors.map((f) => (
+          <button
+            key={f.id}
+            onClick={() => setFloorId(f.id)}
+            className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-[12px] font-medium transition-colors ${
+              floorId === f.id ? "bg-[#111318] text-white" : "bg-white text-gray-500 border border-gray-100"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-white rounded-[24px] p-4 shadow-sm border border-gray-100 mb-4">
+        <p className="text-[13px] font-semibold text-[#111318] mb-0.5">{floor.label}</p>
+        <p className="text-[12px] text-gray-500 mb-3">{floor.caption}</p>
+
+        <div className="grid grid-cols-4 gap-1.5 mb-4">
+          {floor.rooms.map((r) => (
+            <div
+              key={r.id}
+              className={`rounded-[10px] px-2 py-3 flex flex-col justify-center min-h-[58px] ${roomStyles[r.type]}`}
+              style={{ gridColumn: `span ${Math.min(r.span, 4)} / span ${Math.min(r.span, 4)}` }}
+            >
+              <span className="text-[11px] font-medium leading-tight">{r.name}</span>
+              {r.you && <span className="text-[10px] opacity-70 mt-0.5">Вы здесь</span>}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap gap-x-3 gap-y-1.5 pt-3 border-t border-gray-100">
+          {link.legend.map((l) => (
+            <div key={l.type} className="flex items-center gap-1.5">
+              <span className={`w-3 h-3 rounded-[4px] flex-shrink-0 ${roomStyles[l.type]}`} />
+              <span className="text-[11px] text-gray-500">{l.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function TariffsView({ link }) {
+  return (
+    <>
+      {link.groups.map((g) => (
+        <div key={g.title} className="mb-5">
+          <p className="text-[13px] font-medium text-gray-500 mb-2">{g.title}</p>
+          {g.items.map((item) => (
+            <div key={item.id} className="bg-white rounded-[16px] p-3.5 mb-2 shadow-sm border border-gray-100">
+              <div className="flex items-start justify-between gap-3 mb-1">
+                <div className="flex items-center gap-2 min-w-0">
+                  <p className="text-[14px] font-semibold text-[#111318]">{item.name}</p>
+                  {item.badge && (
+                    <span className="text-[10px] font-medium bg-[#111318] text-white px-1.5 py-0.5 rounded-full flex-shrink-0">
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[14px] font-semibold text-[#111318] flex-shrink-0">{item.price}</p>
+              </div>
+              <p className="text-[12px] text-gray-500">{item.details}</p>
+            </div>
+          ))}
+        </div>
+      ))}
+    </>
+  );
+}
+
+function CoverageView({ link }) {
+  return (
+    <>
+      {link.regions.map((r) => (
+        <div key={r.id} className="bg-white rounded-[16px] p-3.5 mb-2 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between gap-3 mb-1.5">
+            <p className="text-[14px] font-medium text-[#111318] min-w-0">{r.name}</p>
+            <div className="flex items-end gap-0.5 flex-shrink-0" aria-label={r.quality}>
+              {[1, 2, 3].map((bar) => (
+                <span
+                  key={bar}
+                  className={`w-1.5 rounded-sm ${bar <= r.level ? "bg-[#111318]" : "bg-gray-200"}`}
+                  style={{ height: `${4 + bar * 3}px` }}
+                />
+              ))}
+            </div>
+          </div>
+          <p className="text-[12px] text-gray-500">
+            {r.quality} · SLA {r.sla}
+          </p>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function FilesView({ link }) {
+  return (
+    <>
+      {link.groups.map((g) => (
+        <div key={g.title} className="mb-5">
+          <p className="text-[13px] font-medium text-gray-500 mb-2">{g.title}</p>
+          {g.items.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => alert(`Скачать: ${item.name}`)}
+              className="w-full bg-white rounded-[16px] p-3 mb-2 flex items-center gap-3 shadow-sm border border-gray-100 active:scale-[0.98] transition-transform"
+            >
+              <div className="w-9 h-9 rounded-[10px] bg-gray-100 flex items-center justify-center flex-shrink-0">
+                <FileText size={16} className="text-[#111318]" />
+              </div>
+              <div className="flex-1 text-left min-w-0">
+                <p className="text-[14px] font-medium text-[#111318] truncate">{item.name}</p>
+                <p className="text-[12px] text-gray-500">{item.meta}</p>
+              </div>
+              <Download size={16} className="text-gray-300 flex-shrink-0" />
+            </button>
+          ))}
+        </div>
+      ))}
+    </>
+  );
+}
+
+function ToolsView({ link }) {
+  return (
+    <>
+      {link.items.map((item) => {
+        const pending = item.status !== "Доступ выдан";
+        return (
+          <button
+            key={item.id}
+            onClick={() => alert(pending ? `${item.name}: ${item.status}` : `Открыть: ${item.name}`)}
+            className="w-full bg-white rounded-[16px] p-3.5 mb-2 flex items-center gap-3 shadow-sm border border-gray-100 active:scale-[0.98] transition-transform"
+          >
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-[14px] font-medium text-[#111318]">{item.name}</p>
+              <p className="text-[12px] text-gray-500">{item.detail}</p>
+              <p className={`text-[11px] mt-0.5 ${pending ? "text-[#C64545]" : "text-gray-400"}`}>{item.status}</p>
+            </div>
+            <ExternalLink size={16} className="text-gray-300 flex-shrink-0" />
+          </button>
+        );
+      })}
+    </>
+  );
+}
+
+function QuickLinkScreen({ link, onBack }) {
+  return (
+    <div className="px-5 pt-6">
+      <ScreenHeader title={link.title} onBack={onBack} />
+      {link.kind === "office" && <OfficeMapView link={link} />}
+      {link.kind === "tariffs" && <TariffsView link={link} />}
+      {link.kind === "coverage" && <CoverageView link={link} />}
+      {link.kind === "files" && <FilesView link={link} />}
+      {link.kind === "tools" && <ToolsView link={link} />}
+      {link.note && <p className="text-[11px] text-gray-400 leading-relaxed mt-1">{link.note}</p>}
+    </div>
+  );
+}
+
+function BaseScreen({ base, quickLinks, onOpenArticle, onOpenQuickLink }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Все");
 
@@ -590,7 +934,7 @@ function BaseScreen({ base, quickLinks, onOpenArticle }) {
           return (
             <button
               key={link.id}
-              onClick={() => alert(link.title)}
+              onClick={() => onOpenQuickLink(link)}
               className="bg-white rounded-[20px] p-3.5 flex flex-col items-start gap-2.5 shadow-sm border border-gray-100 active:scale-95 transition-transform"
             >
               <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
@@ -771,9 +1115,7 @@ function PlanScreen({ plan }) {
                             item.done ? "bg-[#111318]" : "bg-gray-200 border border-gray-300"
                           }`}
                         />
-                        <span
-                          className={`text-[13px] ${item.done ? "text-gray-400 line-through" : "text-[#111318]"}`}
-                        >
+                        <span className={`text-[13px] ${item.done ? "text-gray-400 line-through" : "text-[#111318]"}`}>
                           {item.title}
                         </span>
                       </div>
@@ -967,10 +1309,10 @@ export default function App() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const [article, setArticle] = useState(null);
+  const [quickLink, setQuickLink] = useState(null);
   const [pushVisible, setPushVisible] = useState(false);
 
   // Разворачиваем мини-апп на всю доступную высоту при запуске.
-  // Гарантированный полноэкранный режим также зависит от настроек бота в BotFather.
   useEffect(() => {
     try {
       const wa = typeof window !== "undefined" && window.Telegram && window.Telegram.WebApp;
@@ -1003,6 +1345,7 @@ export default function App() {
     setProfileOpen(false);
     setAiChatOpen(false);
     setArticle(null);
+    setQuickLink(null);
     setActiveTab(tab);
   };
 
@@ -1012,6 +1355,8 @@ export default function App() {
   if (aiChatOpen) {
     content = <AiChatScreen aiAssistant={mockData.aiAssistant} onBack={() => setAiChatOpen(false)} />;
     scrollable = false;
+  } else if (quickLink) {
+    content = <QuickLinkScreen link={quickLink} onBack={() => setQuickLink(null)} />;
   } else if (article) {
     content = <ArticleScreen article={article} onBack={() => setArticle(null)} />;
   } else if (profileOpen) {
@@ -1027,7 +1372,12 @@ export default function App() {
     content = <DashboardScreen data={mockData} onClose={handleClose} onOpenProfile={() => setProfileOpen(true)} />;
   } else if (activeTab === "base") {
     content = (
-      <BaseScreen base={mockData.base} quickLinks={mockData.quickLinks} onOpenArticle={(a) => setArticle(a)} />
+      <BaseScreen
+        base={mockData.base}
+        quickLinks={mockData.quickLinks}
+        onOpenArticle={(a) => setArticle(a)}
+        onOpenQuickLink={(l) => setQuickLink(l)}
+      />
     );
   } else if (activeTab === "plan") {
     content = <PlanScreen plan={mockData.plan} />;
@@ -1037,23 +1387,25 @@ export default function App() {
     );
   }
 
+  const navActive = profileOpen || aiChatOpen || article || quickLink ? "" : activeTab;
+
   return (
     <div className="relative bg-[#F5F6F3] mx-auto flex flex-col app-shell">
       <style>{`
         .app-shell {
           max-width: 400px;
           width: 100%;
-          height: 100vh;          /* фолбэк для старых браузеров */
-          height: 100dvh;          /* корректная высота с учётом панелей мобильных браузеров */
+          height: 100vh;
+          height: 100dvh;
           -webkit-font-smoothing: antialiased;
           font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
         }
         .no-scrollbar {
-          scrollbar-width: none;             /* Firefox */
-          -ms-overflow-style: none;          /* IE / старый Edge */
-          -webkit-overflow-scrolling: touch; /* инерционный скролл в iOS WebView */
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          -webkit-overflow-scrolling: touch;
         }
-        .no-scrollbar::-webkit-scrollbar {   /* Chrome / Safari */
+        .no-scrollbar::-webkit-scrollbar {
           display: none;
           width: 0;
           height: 0;
@@ -1062,9 +1414,7 @@ export default function App() {
           padding-bottom: 24px;
           padding-bottom: calc(16px + env(safe-area-inset-bottom, 8px));
         }
-        .push-in {
-          animation: pushIn 0.25s ease-out;
-        }
+        .push-in { animation: pushIn 0.25s ease-out; }
         @keyframes pushIn {
           from { opacity: 0; -webkit-transform: translateY(-12px); transform: translateY(-12px); }
           to { opacity: 1; -webkit-transform: translateY(0); transform: translateY(0); }
@@ -1082,7 +1432,7 @@ export default function App() {
         <div className="flex-1 min-h-0">{content}</div>
       )}
 
-      <BottomNav activeTab={profileOpen || aiChatOpen || article ? "" : activeTab} setActiveTab={goTab} />
+      <BottomNav activeTab={navActive} setActiveTab={goTab} />
     </div>
   );
 }
